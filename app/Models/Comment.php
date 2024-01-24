@@ -17,22 +17,23 @@ class Comment extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function replies()
     {
         return $this->hasMany(Reply::class);
     }
 
-    public function getTimeAttribute(){
+    public function getTimeAttribute()
+    {
         return strtotime($this->created_at);
     }
 
-    public function getOwnerAttribute(){
-        if(auth()->check()){
+    public function getOwnerAttribute()
+    {
+        if (auth()->check()) {
             return $this->user->id == auth()->id();
         }
 
         return false;
     }
-
 }

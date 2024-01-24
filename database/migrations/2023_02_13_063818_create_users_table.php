@@ -15,14 +15,19 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->string('socket_id')->nullable();
             $table->unsignedInteger('active')->default(1);
             $table->string('first_name')->default('null');
             $table->string('last_name')->default('null');
-            $table->string('phone')->unique;
+            $table->string('username')->unique;
             $table->string('email')->nullable();
             $table->string('password');
-            $table->string('image')->nullable();
+            $table->string('profile_pic')->nullable();
+            $table->string('position')->nullable();
             $table->string('role')->nullable();
+            $table->boolean('online')->default(false);
+            $table->timestamp('last_login')->nullable();
+            $table->timestamp('last_logout')->nullable();
             $table->timestamps();
 
         });

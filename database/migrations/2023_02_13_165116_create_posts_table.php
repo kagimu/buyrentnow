@@ -16,25 +16,16 @@ class CreatePostsTable extends Migration
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('category_id');
             $table->text('desc');
-            $table->text('name')->nullable();
-            $table->text('owner')->nullable();
-            $table->string('contact');
-            $table->text('bedroom')->nullable();
-            $table->text('bathroom')->nullable();
+            $table->text('title')->nullable();
+            $table->string('owner')->nullable();
             $table->json('images');
             $table->string('video')->nullable();
-            $table->string('price');
-            $table->string('profile_pic')->nullable();
-            $table->string('quick_true')->nullable();
+            $table->string('cover_pic')->nullable();
             $table->text('location');
-            $table->string('saved')->nullable();
-            $table->string('size');
-            $table->text('status');
-            $table->text('type')->nullable();
+            $table->string('tag')->nullable();
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('category_id')->references('id')->on('categories');
+            
             $table->timestamps();
             
         });

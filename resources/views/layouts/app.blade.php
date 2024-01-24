@@ -32,5 +32,10 @@
                 {{ $slot }}
             </main>
         </div>
+                   <script src="{{ asset('js/app.js') }}"></script>
+                    <script>
+                        window.Laravel = {!! json_encode(['user_id' => auth()->id()]) !!};
+                    </script>
+                    <script src="{{ asset('js/user-status.js') }}"></script>
     </body>
 </html>

@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
 use App\Models\Post;
 use App\Models\User;
-use App\Models\Agent;
+use App\Models\Impact;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function dashboard(){
+     public function dashboard()
+    {
         session(['title' => 'Dashboard']);
 
         $posts = number_format(Post::count());
+        $impacts = number_format(Impact::count());
         $clients = number_format(User::where('role', 'client')->count());
-        $support = number_format(User::where('role', 'support')->count());
-        $agents = number_format(Agent::count());
 
-        $support_users = User::where('role', 'support')->where('active', 0)->orderBy('created_at', 'desc')->get();
-        $active_clients = User::where('role', 'client')->orderBy('created_at', 'desc')->take(10)->get();
+        $active_clients = User::withCount(['posts', 'impacts'])
+            ->where('role', 'client')
+            ->orderByDesc(DB::raw('posts_count + impacts_count'))
+            ->take(10)
+            ->get();
 
-        return view('dashboard', compact('posts', 'clients', 'support', 'agents', 'support_users', 'active_clients'));
+        return view('dashboard', compact('posts', 'impacts', 'clients', 'active_clients'));
     }
 }
-

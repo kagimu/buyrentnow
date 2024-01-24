@@ -22,22 +22,24 @@ class AdminSeeder extends Seeder
         }
         $admin->first_name = "Kagimu";
         $admin->last_name = "JohnPaul";
-        $admin->phone = "0759632498";
+        $admin->username = "jayp";
         $admin->email = "kagimujayp01@gmail.com";
         $admin->password = Hash::make("12345");
+        $admin->position = 'Senior Developer';
         $admin->role = "admin";
         $admin->save();
 
-        $admin2 = User::where('email','matovu.francisk@gmail.com ')->first();
+        $admin2 = User::where('email','zaharah@gmail.com ')->first();
         if(!$admin2){
             $admin2 = new User;
         }
-        $admin->first_name = "Matovu";
-        $admin->last_name = "Francis";
-        $admin2->phone = "0750662136";
-        $admin2->email = "matovu.francisk@gmail.com ";
+        $admin2->first_name = "N";
+        $admin2->last_name = "Zaharah";
+        $admin2->username = "zaharah";
+        $admin2->email = "zaharah@gmail.com ";
         $admin2->password = Hash::make("12345");
         $admin2->role = "admin";
+        $admin2->position = "administrator";
         $admin2->save();
     }
 }

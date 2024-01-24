@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Impact;
+use App\Helpers\FCM;
+use App\Helpers\Utils;
 use App\Models\Category;
-use Storage;
-use Str;
+use App\Models\Comment;
+use App\Models\Impact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Auth;
-use App\Helpers\Utils;
-use App\Models\Comment;
-use App\Helpers\FCM;
-use App\Models\Reply;
+use Storage;
 
 class ImpactController extends Controller
 {
-    protected $utils, $fcm;
+    protected $utils;
+
+    protected $fcm;
 
     public function __construct(Utils $utils, FCM $fcm)
     {
@@ -27,14 +26,16 @@ class ImpactController extends Controller
     public function index()
     {
         session(['title' => 'Impacts']);
-        $impacts = Impact::with('category')->withCount('comments')->orderBy('id', 'desc')->get();
-        return view('impacts.index', compact('Impacts'));
+        $impacts = Impact::withCount('comments')->orderBy('id', 'desc')->get();
+
+        return view('impacts.index', compact('impacts'));
     }
 
     public function getImpacts()
     {
         // Get all Impacts
         $impacts = Impact::with('user')->withCount('comments')->orderBy('created_at', 'desc')->take(15)->get();
+
         return response()->json($impacts);
     }
 
@@ -42,33 +43,32 @@ class ImpactController extends Controller
     {
 
         $impacts = Impact::with('user')->withCount('comments')->where('category_id', $request->category_name)->orderBy('created_at')->take(15)->get();
+
         return response()->json($impacts);
     }
-
 
     public function getImpactDetails($id)
     {
         // Get a single Impact
         $impact = Impact::with('user', 'comments', 'comments.user', 'comments.replies', 'comments.replies.user')->withCount('comments')->find($id);
+
         return response()->json($impact);
     }
 
     public function create()
     {
-        $categories = Category::all();
-         $impact = new Impact;
-        return view('impacts.create', compact('categories', 'Impact'));
-    }
+        $impact = new Impact;
 
+        return view('impacts.create', compact('impact'));
+    }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'category_id' => 'numeric|required',
-            'name' => 'required',
+            'title' => 'required',
             'desc' => 'required',
             'location' => 'required',
-            'contact' => 'required',
+            'tag' => 'required',
             'owner' => 'required',
             'images' => 'required|array',
             'images.*' => 'required|image|mimes:pdf,jpeg,png,jpg,gif',
@@ -83,52 +83,47 @@ class ImpactController extends Controller
                     return response()->json($message, 400);
                 } else {
                     // Redirect back with an error message
-                    return redirect()->route('index.Impacts')->with('error', $message);
+                    return redirect()->route('index.impacts')->with('error', $message);
                 }
             } else {
                 // Get the authenticated user
                 $user = auth()->user();
 
-                        $impact = new Impact();
-                        $impact->category_id = $request->category_id;
-                        $impact->name = $request->name;
-                        $impact->desc = $request->desc;
-                        $impact->location = $request->location;
-                        $impact->size = $request->size;
-                        $impact->status = $request->status;
-                        $impact->type = $request->type;
-                        $impact->contact = $request->contact;
-                        $impact->owner = $request->input('owner');
-                        $impact->user_id = $user->id; // Associate the Impact with the user
+                $impact = new Impact();
+                $impact->title = $request->title;
+                $impact->desc = $request->desc;
+                $impact->location = $request->location;
+                $impact->tag = $request->tag;
+                $impact->owner = $request->input('owner');
+                $impact->user_id = $user->id; // Associate the Impact with the user
 
-                        if ($request->hasFile('video')) {
-                            $videoFile = $request->file('video');
-                            $videoExt = $videoFile->getClientOriginalExtension();
-                            $videoName = time() . '_'  . $videoExt;
-                            $videoPath = $videoFile->storeAs('videos', $videoName, 'public');
-                                $impact->video = $videoPath;
-                        }
+                if ($request->hasFile('video')) {
+                    $videoFile = $request->file('video');
+                    $videoExt = $videoFile->getClientOriginalExtension();
+                    $videoName = time().'_'.$videoExt;
+                    $videoPath = $videoFile->storeAs('videos', $videoName, 'public');
+                    $impact->video = $videoPath;
+                }
 
+                if ($request->hasFile('cover_pic')) {
+                    $imageFile = $request->file('cover_pic');
+                    $imageExt = $imageFile->getClientOriginalExtension();
+                    $imageName = time().'_'.$imageExt;
+                    $imagePath = $imageFile->storeAs('images/profile', $imageName, 'public');
+                    $impact->cover_pic = $imagePath;
+                }
 
-                        if ($request->hasFile('profile_pic')) {
-                            $imageFile = $request->file('profile_pic');
-                            $imageExt = $imageFile->getClientOriginalExtension();
-                            $imageName = time() . '_'  . $imageExt;
-                            $imagePath = $imageFile->storeAs('images/profile', $imageName, 'public');
-                            $impact->profile_pic = $imagePath;
-                        }
-
-                                        // upload labtest documents 
-                        if ($request->hasFile('images')) {
-                            $images = [];
-                            foreach ($request->file('images') as $index => $file) {
-                                $file_extension = $file->getClientOriginalExtension();
-                                $file_name = time() . '_' . $index . '.' . $file_extension;
-                                $file_path = $file->storeAs('images/landlords', $file_name, 'public');
-                                array_push($images, $file_path);
-                            }
-                            $impact->images = $images;
-                        }
+                // upload labtest documents
+                if ($request->hasFile('images')) {
+                    $images = [];
+                    foreach ($request->file('images') as $index => $file) {
+                        $file_extension = $file->getClientOriginalExtension();
+                        $file_name = time().'_'.$index.'.'.$file_extension;
+                        $file_path = $file->storeAs('images/landlords', $file_name, 'public');
+                        array_push($images, $file_path);
+                    }
+                    $impact->images = $images;
+                }
 
                 $impact->save();
 
@@ -141,7 +136,7 @@ class ImpactController extends Controller
                     ], 200);
                 } else {
                     // Redirect back with a success message
-                    return redirect()->route('index.Impacts')->with('success', 'Impact has been created successfully');
+                    return redirect()->route('index.impacts')->with('success', 'Impact has been created successfully');
                 }
             }
         } catch (Exception $e) {
@@ -157,86 +152,81 @@ class ImpactController extends Controller
         }
     }
 
-
     public function show($id)
     {
         session(['title' => 'Show Impact']);
-        $impact = Impacts::find($id);
+        $impact = Impact::find($id);
         $comments = Comment::where('Impact_id', $impact->id)->get();
-        return view('impacts.show', compact('Impact', 'comments'));
+
+        return view('impacts.show', compact('impact', 'comments'));
     }
 
-
-        public function edit($id)
+    public function edit($id)
     {
         $categories = Category::all();
         $impact = Impacts::find($id);
+
         return view('impacts.edit', compact('categories', 'Impact'));
     }
 
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'category_id' => 'numeric|required',
+            'title' => 'required',
+            'desc' => 'required',
+            'location' => 'required',
+            'tag' => 'required',
+            'owner' => 'required',
+            'images' => 'required|array',
+            'images.*' => 'required|image|mimes:pdf,jpeg,png,jpg,gif',
 
+        ]);
 
-            public function update(Request $request, $id)
-        {
-            $request->validate([
-                'category_id' => 'numeric|required',
-                'name' => 'required',
-                'desc' => 'required',
-                'location' => 'required',
-                'contact' => 'required',
-                'owner' => 'required',
-                'images' => 'required|array',
-                'images.*' => 'required|image|mimes:pdf,jpeg,png,jpg,gif',
-                
-            ]);
+        $impact = Impact::find($id);
+        $impact->category_id = $request->category_id;
+        $impact->title = $request->title;
+        $impact->desc = $request->desc;
+        $impact->location = $request->location;
+        $impact->tag = $request->tag;
+        $impact->contact = $request->contact;
 
-            $impact = Impact::find($id);
-             $impact->category_id = $request->category_id;
-            $impact->name = $request->name;
-            $impact->desc = $request->desc;
-            $impact->location = $request->location;
-            $impact->size = $request->size;
-            $impact->status = $request->status;
-            $impact->type = $request->type;
-            $impact->contact = $request->contact;
+        if ($request->hasFile('video')) {
+            $videoName = time().'.'.$request->video->extension();
+            $request->video->storeAs('public/videos', $videoName);
+            $impact->video = url(Storage::url('videos/'.$videoName));
+        }
 
-            if ($request->hasFile('video')) {
-        $videoName = time() . "." . $request->video->extension();
-        $request->video->storeAs('public/videos', $videoName);
-        $impact->video = url(Storage::url('videos/' . $videoName));
+        if (is_array($request->file('images')) || is_object($request->file('images'))) {
+            $imageUrls = [];
+            foreach ($request->file('images') as $image) {
+                $imageName = time().'_'.$image->getClientOriginalName();
+                $image->storeAs('public/images', $imageName);
+                $url = Storage::url('images/'.$imageName);
+                array_push($imageUrls, $url);
+            }
+            $impact->images = $imageUrls;
+        }
+
+        $impact->save();
+
+        return redirect()->route('index.Impacts')
+            ->with('success', 'Impact has been updated successfully.');
     }
 
-            if (is_array($request->file('images')) || is_object($request->file('images'))) {
-                $imageUrls = array();
-                foreach ($request->file('images') as $image) {
-                    $imageName = time() . "_" . $image->getClientOriginalName();
-                    $image->storeAs('public/images', $imageName);
-                    $url = Storage::url('images/' . $imageName);
-                    array_push($imageUrls, $url);
-                }
-                $impact->images = $imageUrls;
-            }
-
-            $impact->save();
-
-            return redirect()->route('index.Impacts')
-                ->with('success', 'Impact has been updated successfully.');
-        }
-
     public function destroy(Impact $impact)
-        {
-            $impact->delete();
+    {
+        $impact->delete();
 
-            return redirect()->route('impacts.index')->with('success', 'Impact has been deleted successfully');
-        }
-
+        return redirect()->route('impacts.index')->with('success', 'Impact has been deleted successfully');
+    }
 
     public function search(Request $request)
     {
 
         $builder = Impacts::query()->with('user')->withCount('comments')->orderBy('created_at', 'desc');
 
-        $builder->where('desc', 'like', '%' . $request->input('query') . '%');
+        $builder->where('desc', 'like', '%'.$request->input('query').'%');
 
         return response()->json($builder->get());
     }
@@ -252,9 +242,11 @@ class ImpactController extends Controller
         return response()->json($impact);
     }
 
-    public function confirmDelete($id){
+    public function confirmDelete($id)
+    {
         session(['title' => 'Confirm Delete']);
         $impact = Impacts::find($id);
+
         return view('impacts.confirm_delete', compact('Impact'));
     }
 
@@ -264,11 +256,11 @@ class ImpactController extends Controller
 
         if ($impact) {
             $impact->delete();
+
             return redirect()->route('impacts.index')->with('success', 'Impact has been deleted successfully');
         } else {
             return redirect()->route('impacts.index')->with('error', 'Impact not found');
         }
 
     }
-
 }
