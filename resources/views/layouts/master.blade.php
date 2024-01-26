@@ -11,7 +11,7 @@
     <meta name="keywords" content="link, linkup, li, linking, lik, linked" />
 
     <!-- Title -->
-    <title>{{config('app.name')}} | {{session('title')}}</title>
+    <title>Reach A Hand | {{session('title')}}</title>
 
     <!--Favicon -->
     <link rel="icon" href="https://reachahand.org/wp-content/themes/qido/favicon.ico" type="image/x-icon" />
@@ -78,7 +78,7 @@
                         {{--<h3 style="color: #5eb95d; margin-top: 10px;">{{config('app.name')}}</h3>--}}
                         <h4
                             style="color: white; margin-top: 10px; background: #00138f; padding-top: 12px; padding-bottom:12px; border-radius: 6px">
-                            REACHAHAND</h4>
+                            Reach A Hand</h4>
 
                     </a>
                 </div>
@@ -299,7 +299,7 @@
             <div class="container">
                 <div class="row align-items-center flex-row-reverse">
                     <div class="col-md-12 col-sm-12 mt-3 mt-lg-0 text-center">
-                        Copyright © 2023 <a href="#">{{config('app.name')}}</a>. Designed by <a href="#">JAYP UG</a>
+                        Copyright © 2024 <a href="#">{{config('app.name')}}</a>. Designed by <a href="#">Sir JayP</a>
                         All rights reserved.
                     </div>
                 </div>

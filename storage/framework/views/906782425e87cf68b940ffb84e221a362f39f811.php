@@ -60,8 +60,8 @@
             <div class="card-body">
                 <div class="d-flex no-block align-items-center">
                     <div>
-                        <h6 class="text-white">Support</h6>
-                        <h2 class="text-white m-0 font-weight-bold"><?php echo e($posts); ?></h2>
+                        <h6 class="text-white">Partners</h6>
+                        <h2 class="text-white m-0 font-weight-bold">15</h2>
                     </div>
                     <div class="ml-auto">
                         <span class="text-white display-6"><i class="fa fa-th-list fa-2x"></i></span>

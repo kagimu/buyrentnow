@@ -2,21 +2,28 @@
 
 namespace App\Console\Commands;
 
-
-use Illuminate\Console\Command;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class UpdateUserOnlineStatus extends Command
 {
-    protected $signature = 'update:user-online-status';
-    protected $description = 'Update user online status';
+    protected $signature = 'update:user-status';
+
+    protected $description = 'Update user status to offline at 12 AM every day';
 
     public function handle()
     {
-        // Get all users and set online status to false
-        User::where('online', true)->update(['online' => false]);
+        // Get users who were online before today
+        $usersToUpdate = User::where('online', true)
+            ->where('last_activity', '<', now()->startOfDay())
+            ->get();
 
-        $this->info('User online status updated successfully.');
+        // Update the status to offline
+        $usersToUpdate->each(function ($user) {
+            $user->online = false;
+            $user->save();
+        });
+
+        $this->info('User status updated successfully.');
     }
 }
